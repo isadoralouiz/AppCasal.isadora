@@ -20,8 +20,6 @@ start-docker:
 	  $(IMAGE_NAME) \
 	
 
-
-
 # Cria um novo projeto Expo na pasta definida
 init:
 	mkdir -p $(APP_DIR)
@@ -47,7 +45,3 @@ reinstall:
 	cd $(APP_DIR) && \
 	rm -rf node_modules package-lock.json && \
 	npm install
-
-git:
-	git config --global user.email isadora.izlou@gmail.com
-	git config --global user.name isadora

@@ -9,6 +9,6 @@ COPY app/package*.json ./
 RUN npm install
 COPY app .
 
-EXPOSE 19006 8081 19000
+EXPOSE 8081
 
-CMD ["npx", "expo", "start", "--web", "--host", "localhost"]
+CMD ["npx", "expo", "start", "--web"]
