@@ -1,20 +1,35 @@
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+
+
+import SignUp from './screens/user/Signup';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <ScrollView style={styles.scroll}>
+      <View style={styles.container}>
+
+        <SignUp />
+
+        <StatusBar style="auto" />
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scroll: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
+  container: {
+    padding: 20,
+    gap: 20,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 20,
+  }
 });
