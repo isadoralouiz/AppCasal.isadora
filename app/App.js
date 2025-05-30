@@ -1,20 +1,23 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 
+import {  StyleSheet } from 'react-native';
 
 import SignUp from './screens/user/Signup';
+import Login from './screens/user/Login';
+
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+const Stack = createNativeStackNavigator();
+
 
 export default function App() {
   return (
-    <ScrollView style={styles.scroll}>
-      <View style={styles.container}>
-
-        <SignUp />
-
-        <StatusBar style="auto" />
-      </View>
-    </ScrollView>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Login">
+        <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
+        <Stack.Screen name="SignUp" component={SignUp} options={{ title: 'Crie sua conta' }} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
@@ -27,9 +30,4 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 20,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-  }
 });
