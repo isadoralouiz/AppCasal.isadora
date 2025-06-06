@@ -70,7 +70,7 @@ const HouseSelection = () => {
        * doc(db, 'users', user.uid) cria uma referência ao documento do usuário
        * updateDoc() atualiza os dados no Firestore
        * O objeto passado contém os dados que queremos atualizar
-       * houseId é o id da casa que o usuário criou, que será usado para associar o usuário à casa.
+       * houseId é o id da casa que o usuário criou, que será usado para associar o usuário à casa - pois quando ele logar eu ja sei a casa dele.
        * Isso é importante para que o usuário possa acessar a casa que ele criou posteriormente.
        * //doc é uma coleção - com parado com uma tupla do SQL - uma linha da tabela -
        */
@@ -83,7 +83,7 @@ const HouseSelection = () => {
 
       /**
        * Redireciona o usuário para a tela inicial
-       * navigation.reset() redefine a pilha de navegação
+       * navigation.reset() redefine a pilha de navegação - pra não voltar pra tela anterior
        * index: 0 define que a primeira tela da pilha será a de Home
        * routes: [{ name: 'Home' }] define que a primeira tela será a de Home
        */
@@ -100,7 +100,7 @@ const HouseSelection = () => {
   
 
   const handleJoinHouse = async () => {
-
+  //
 
     
      /**
@@ -131,14 +131,14 @@ const HouseSelection = () => {
 
       /**
        * Busca o snapsot do documento da casa
-       * getDoc(houseRef) busca o documento da casa no Firestore
+       * getDoc(houseRef) busca o documento da casa no Firestore - banco de dados
        * houseRef é a referência ao documento da casa que criamos anteriormente
        * O snapshot contém os dados do documento, se ele existir.
        * Se o documento não existir, o snapshot não terá dados e retornará false para exists().
        */
       const houseSnap = await getDoc(houseRef);
   
-      if (!houseSnap.exists()) {
+      if (!houseSnap.exists()) { //verifica se não está vazia
         Alert.alert('Erro', 'Casa não encontrada.');
         return;
       }
@@ -150,7 +150,7 @@ const HouseSelection = () => {
        * members é um array que contém os ids dos usuários que são membros da casa
        */
       await updateDoc(houseRef, {
-        members: arrayUnion(user.uid),
+        members: arrayUnion(user.uid), //adiciona elementos no vetor e verifica se ja exite
       });
   
       /**
@@ -174,9 +174,6 @@ const HouseSelection = () => {
     }
   };
   
-  
-  
-
   
     return (
   <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

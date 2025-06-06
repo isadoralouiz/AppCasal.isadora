@@ -12,6 +12,7 @@ import {
 import globalStyles from '../../styles/GlobalStyles';
 import { auth } from '../../services/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { setDoc } from 'firebase/firestore';
 
 
 const Login = ({ navigation }) => {
@@ -28,8 +29,10 @@ const Login = ({ navigation }) => {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
+        if(email.localeCompare(setDoc.members))
         Alert.alert('Login realizado com sucesso!', `Bem-vindo de volta, ${user.email}`);
         // aqui você pode navegar para outra tela, ex: navigation.navigate('Home')
+        navigation.navigate('Home')
       })
       .catch((error) => {
         let message = 'Erro ao fazer login.';
