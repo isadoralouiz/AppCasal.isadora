@@ -13,7 +13,7 @@ import { KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import globalStyles from '../../styles/GlobalStyles';
-import { auth, db } from '../../services/firebase';
+import { auth, db } from '../../services/firebase'; //a variável BD- conecção com o fireStore; variável auth- objeto, autentificação
 import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { Alert } from 'react-native';
 
@@ -38,7 +38,7 @@ const HouseSelection = () => {
      * Isso garante que o id seja único e não contenha caracteres inválidos.
      * O id da casa será usado para criar o documento no Firestore.
      */
-    const houseId = user.email.replace(/[@.]/g, '-');
+    const houseId = user.email.replace(/[@.]/g, '-'); //quando aparecer o @, vai mudar pra -
   
     if (!houseName.trim()) {
       Alert.alert('Erro', 'Informe um nome para a casa.');
@@ -58,10 +58,10 @@ const HouseSelection = () => {
      */
       const houseRef = doc(db, 'houses', houseId);
       await setDoc(houseRef, {
-        name: houseName,
-        createdBy: user.uid,
-        createdByEmail: user.email,
-        members: [user.uid],
+        name: houseName, //mostra o nome de quem criou a casa
+        createdBy: user.uid, //mostra o id de quem criou a casa
+        createdByEmail: user.email, //mostra o email de quem criou a casa
+        members: [user.uid], //mostra os membros de quem criou a casa (no caso só o ADM)
         createdAt: new Date(),
       });
   
@@ -72,6 +72,7 @@ const HouseSelection = () => {
        * O objeto passado contém os dados que queremos atualizar
        * houseId é o id da casa que o usuário criou, que será usado para associar o usuário à casa.
        * Isso é importante para que o usuário possa acessar a casa que ele criou posteriormente.
+       * //doc é uma coleção - com parado com uma tupla do SQL - uma linha da tabela -
        */
       await updateDoc(doc(db, 'users', user.uid), {
         houseId: houseId,
