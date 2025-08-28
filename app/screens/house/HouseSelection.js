@@ -13,7 +13,7 @@ import { KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import globalStyles from '../../styles/GlobalStyles';
-import { auth, db } from '../../services/firebase'; //a variável BD- conecção com o fireStore; variável auth- objeto, autentificação
+import { auth, db } from '../../services/firebase';
 import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { Alert } from 'react-native';
 
@@ -38,7 +38,7 @@ const HouseSelection = () => {
      * Isso garante que o id seja único e não contenha caracteres inválidos.
      * O id da casa será usado para criar o documento no Firestore.
      */
-    const houseId = user.email.replace(/[@.]/g, '-'); //quando aparecer o @, vai mudar pra -
+    const houseId = user.email.replace(/[@.]/g, '-');
   
     if (!houseName.trim()) {
       Alert.alert('Erro', 'Informe um nome para a casa.');
@@ -58,10 +58,10 @@ const HouseSelection = () => {
      */
       const houseRef = doc(db, 'houses', houseId);
       await setDoc(houseRef, {
-        name: houseName, //mostra o nome de quem criou a casa
-        createdBy: user.uid, //mostra o id de quem criou a casa
-        createdByEmail: user.email, //mostra o email de quem criou a casa
-        members: [user.uid], //mostra os membros de quem criou a casa (no caso só o ADM)
+        name: houseName,
+        createdBy: user.uid,
+        createdByEmail: user.email,
+        members: [user.uid],
         createdAt: new Date(),
       });
   
@@ -70,9 +70,8 @@ const HouseSelection = () => {
        * doc(db, 'users', user.uid) cria uma referência ao documento do usuário
        * updateDoc() atualiza os dados no Firestore
        * O objeto passado contém os dados que queremos atualizar
-       * houseId é o id da casa que o usuário criou, que será usado para associar o usuário à casa - pois quando ele logar eu ja sei a casa dele.
+       * houseId é o id da casa que o usuário criou, que será usado para associar o usuário à casa.
        * Isso é importante para que o usuário possa acessar a casa que ele criou posteriormente.
-       * //doc é uma coleção - com parado com uma tupla do SQL - uma linha da tabela -
        */
       await updateDoc(doc(db, 'users', user.uid), {
         houseId: houseId,
@@ -83,7 +82,7 @@ const HouseSelection = () => {
 
       /**
        * Redireciona o usuário para a tela inicial
-       * navigation.reset() redefine a pilha de navegação - pra não voltar pra tela anterior
+       * navigation.reset() redefine a pilha de navegação
        * index: 0 define que a primeira tela da pilha será a de Home
        * routes: [{ name: 'Home' }] define que a primeira tela será a de Home
        */
@@ -100,7 +99,7 @@ const HouseSelection = () => {
   
 
   const handleJoinHouse = async () => {
-  //
+
 
     
      /**
@@ -131,14 +130,14 @@ const HouseSelection = () => {
 
       /**
        * Busca o snapsot do documento da casa
-       * getDoc(houseRef) busca o documento da casa no Firestore - banco de dados
+       * getDoc(houseRef) busca o documento da casa no Firestore
        * houseRef é a referência ao documento da casa que criamos anteriormente
        * O snapshot contém os dados do documento, se ele existir.
        * Se o documento não existir, o snapshot não terá dados e retornará false para exists().
        */
       const houseSnap = await getDoc(houseRef);
   
-      if (!houseSnap.exists()) { //verifica se não está vazia
+      if (!houseSnap.exists()) {
         Alert.alert('Erro', 'Casa não encontrada.');
         return;
       }
@@ -150,7 +149,7 @@ const HouseSelection = () => {
        * members é um array que contém os ids dos usuários que são membros da casa
        */
       await updateDoc(houseRef, {
-        members: arrayUnion(user.uid), //adiciona elementos no vetor e verifica se ja exite
+        members: arrayUnion(user.uid),
       });
   
       /**
@@ -174,6 +173,9 @@ const HouseSelection = () => {
     }
   };
   
+  
+  
+
   
     return (
   <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

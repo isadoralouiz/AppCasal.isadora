@@ -10,42 +10,84 @@ import {
   Alert
 } from 'react-native';
 import globalStyles from '../../styles/GlobalStyles';
-import { auth } from '../../services/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { setDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../../services/firebase';
 
+// IMPORTANDO O HOOK DO CONTEXT
+import { useAuth } from '../../contexts/AuthContext';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
+  // USANDO O CONTEXT
+  // Aqui acessamos as funções e dados do AuthContext
+  const { login, user, isAuthenticated } = useAuth();
+  
+  // Vamos mostrar o estado atual no console para fins didáticos
+  console.log(' Estado atual do Context:', { user, isAuthenticated });
 
-  const handleLogin = () => {
+ const handleLogin = async () => {
 
     if (!email || !password) {
-      Alert.alert('Erro', 'Preencha todos os campos.');
+        Alert.alert('Erro', 'PREENCHA TODOS OS CAMPOS');
       return;
     }
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        if(email.localeCompare(setDoc.members))
-        Alert.alert('Login realizado com sucesso!', `Bem-vindo de volta, ${user.email}`);
-        // aqui você pode navegar para outra tela, ex: navigation.navigate('Home')
-        navigation.navigate('Home')
-      })
-      .catch((error) => {
-        let message = 'Erro ao fazer login.';
-        if (error.code === 'auth/user-not-found') {
-          message = 'Usuário não encontrado.';
-        } else if (error.code === 'auth/wrong-password') {
-          message = 'Senha incorreta.';
-        } else if (error.code === 'auth/invalid-email') {
-          message = 'Email inválido.';
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        /* Obtém os dados do usuário */
+        const userData = userDocSnap.data();
+        
+        // USANDO O CONTEXT - Salvamos os dados do usuário no estado global
+        const userInfo = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: userData.name,
+          houseId: userData.houseId
+        };
+        
+        // Chama a função login do Context para atualizar o estado global
+        login(userInfo);
+
+        // Se o usuário já estiver associado a uma casa
+        if (userData.houseId) {
+          const houseDocRef = doc(db, 'houses', userData.houseId);
+          const houseDocSnap = await getDoc(houseDocRef);
+
+          if (houseDocSnap.exists()) {
+            const houseData = houseDocSnap.data();
+
+            // Redireciona para Home
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Home' }],
+            });
+            return; // Importante para parar o fluxo aqui
+          }
         }
-        Alert.alert('Erro',message);
-      });
+
+        // Se não tiver casa, redireciona para seleção de casa
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'HouseSelection' }],
+        });
+      } else {
+        Alert.alert('Erro', 'Usuário não encontrado no banco de dados.');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro ao fazer login', error.message);
+    }
   };
+
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
