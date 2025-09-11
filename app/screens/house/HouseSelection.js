@@ -16,21 +16,30 @@ import globalStyles from '../../styles/GlobalStyles';
 import { auth, db } from '../../services/firebase';
 import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { Alert } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 
 
 const HouseSelection = () => {
   const [houseName, setHouseName] = useState('');
   const [houseCode, setHouseCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigation = useNavigation();
+  const { user, buscarDadosUsuario } = useAuth();
 
-      // Obtém o usuário autenticad
-    const user = auth.currentUser;
+      // Obtém o usuário autenticado
+    const firebaseUser = auth.currentUser;
 
 
   const handleCreateHouse = async () => {
  
+    if (!houseName.trim()) {
+      Alert.alert('Erro', 'Informe um nome para a casa.');
+      return;
+    }
+
+    setIsLoading(true);
 
     /**
      * O id da casa é gerado a partir do email do usuário,
@@ -38,12 +47,7 @@ const HouseSelection = () => {
      * Isso garante que o id seja único e não contenha caracteres inválidos.
      * O id da casa será usado para criar o documento no Firestore.
      */
-    const houseId = user.email.replace(/[@.]/g, '-');
-  
-    if (!houseName.trim()) {
-      Alert.alert('Erro', 'Informe um nome para a casa.');
-      return;
-    }
+    const houseId = firebaseUser.email.replace(/[@.]/g, '-');
   
     try {
     /**
@@ -59,9 +63,9 @@ const HouseSelection = () => {
       const houseRef = doc(db, 'houses', houseId);
       await setDoc(houseRef, {
         name: houseName,
-        createdBy: user.uid,
-        createdByEmail: user.email,
-        members: [user.uid],
+        createdBy: firebaseUser.uid,
+        createdByEmail: firebaseUser.email,
+        members: [firebaseUser.uid],
         createdAt: new Date(),
       });
   
@@ -73,10 +77,12 @@ const HouseSelection = () => {
        * houseId é o id da casa que o usuário criou, que será usado para associar o usuário à casa.
        * Isso é importante para que o usuário possa acessar a casa que ele criou posteriormente.
        */
-      await updateDoc(doc(db, 'users', user.uid), {
+      await updateDoc(doc(db, 'users', firebaseUser.uid), {
         houseId: houseId,
       });
 
+      // Atualiza os dados do usuário no contexto
+      await buscarDadosUsuario(firebaseUser);
     
       Alert.alert('Casa criada com sucesso!');
 
@@ -94,14 +100,20 @@ const HouseSelection = () => {
     } catch (error) {
       console.error(error);
       Alert.alert('Erro ao criar casa', error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
   
 
   const handleJoinHouse = async () => {
+    if (!houseCode.trim()) {
+      Alert.alert('Erro', 'Informe o email do administrador da casa.');
+      return;
+    }
 
+    setIsLoading(true);
 
-    
      /**
      * O id da casa é gerado a partir do email do usuário,
      * substituindo os caracteres '@' e '.' por '-'.
@@ -109,11 +121,6 @@ const HouseSelection = () => {
      * O id da casa será usado para criar o documento no Firestore.
      */
     const houseId = houseCode.trim().replace(/[@.]/g, '-');
-  
-    if (!houseId) {
-      Alert.alert('Erro', 'Informe o email do administrador da casa.');
-      return;
-    }
   
     try {
        /**
@@ -149,7 +156,7 @@ const HouseSelection = () => {
        * members é um array que contém os ids dos usuários que são membros da casa
        */
       await updateDoc(houseRef, {
-        members: arrayUnion(user.uid),
+        members: arrayUnion(firebaseUser.uid),
       });
   
       /**
@@ -160,16 +167,26 @@ const HouseSelection = () => {
        * houseId é o id da casa que o usuário criou, que será usado para associar o usuário à casa.
        * Isso é importante para que o usuário possa acessar a casa que ele criou posteriormente.
        */
-      await updateDoc(doc(db, 'users', user.uid), {
+      await updateDoc(doc(db, 'users', firebaseUser.uid), {
         houseId: houseId,
       });
 
-  
+      // Atualiza os dados do usuário no contexto
+      await buscarDadosUsuario(firebaseUser);
+
       Alert.alert('Você ingressou na casa com sucesso!');
+      
+      // Redireciona para Home
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
       
     } catch (error) {
       console.error(error);
       Alert.alert('Erro ao entrar na casa', error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -193,8 +210,14 @@ const HouseSelection = () => {
         style={[globalStyles.textInput, { width: '100%', marginBottom: 16 }]}
       />
 
-      <TouchableOpacity style={globalStyles.primaryButton} onPress={handleCreateHouse}>
-        <Text style={globalStyles.primaryButtonText}>Criar casa</Text>
+      <TouchableOpacity 
+        style={[globalStyles.primaryButton, isLoading && { opacity: 0.6 }]} 
+        onPress={handleCreateHouse}
+        disabled={isLoading}
+      >
+        <Text style={globalStyles.primaryButtonText}>
+          {isLoading ? 'Criando...' : 'Criar casa'}
+        </Text>
       </TouchableOpacity>
 
       <View style={styles.divider} />
@@ -210,8 +233,14 @@ const HouseSelection = () => {
         style={[globalStyles.textInput, { width: '100%', marginBottom: 16 }]}
       />
 
-      <TouchableOpacity style={globalStyles.secondaryButton} onPress={handleJoinHouse}>
-        <Text style={globalStyles.secondaryButtonText}>Ingressar em uma casa existente</Text>
+      <TouchableOpacity 
+        style={[globalStyles.secondaryButton, isLoading && { opacity: 0.6 }]} 
+        onPress={handleJoinHouse}
+        disabled={isLoading}
+      >
+        <Text style={globalStyles.secondaryButtonText}>
+          {isLoading ? 'Ingressando...' : 'Ingressar em uma casa existente'}
+        </Text>
       </TouchableOpacity>
 
     </KeyboardAvoidingView>

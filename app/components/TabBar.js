@@ -18,6 +18,10 @@ const TabBar = () => {
         navigation.navigate('AddTransaction');
     };
 
+    const handleCategories = () => {
+        navigation.navigate('Categories');
+    };
+
     return (
         <View style={styles.tabBar}>
             <TouchableOpacity>
@@ -29,8 +33,8 @@ const TabBar = () => {
             <TouchableOpacity onPress={handleAddTransaction}>
                 <Text style={[styles.tabItem, styles.addButton]}>+</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
-                <Text style={styles.tabItem}>A</Text>
+            <TouchableOpacity onPress={handleCategories}>
+                <Text style={styles.tabItem}>C</Text>
             </TouchableOpacity>
             <TouchableOpacity>
                 <Text style={styles.tabItem}>E</Text>
