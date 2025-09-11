@@ -3,10 +3,10 @@ import { StyleSheet } from 'react-native';
 import SignUp from './screens/user/Signup';
 import Login from './screens/user/Login';
 import HouseSelection from './screens/house/HouseSelection'; 
+import Categories from './screens/house/Categories';
 import Home from './screens/dashboard/Home';
 import AddTransaction from './screens/transaction/AddTransaction';
 import LoadingScreen from './components/LoadingScreen';
-import SignUpCategory from './screens/transaction/SignUpCategory';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -43,7 +43,7 @@ function AppNavigator() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="SignUp" component={SignUp} />
         <Stack.Screen name="HouseSelection" component={HouseSelection} />
-        <Stack.Screen name="Categories" component={SignUpCategory} />
+        <Stack.Screen name="Categories" component={Categories} />
         <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="AddTransaction" component={AddTransaction} />
       </Stack.Navigator>

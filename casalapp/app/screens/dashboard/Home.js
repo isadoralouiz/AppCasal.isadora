@@ -6,15 +6,7 @@ import TabBar from '../../components/TabBar';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Home = ({ navigation }) => {
-
-    /**
-     * user é um objeto que contém informações do usuário autenticado salvo no context e no asyncstorage
-     * userHouse é um objeto que contém informações da casa do usuário autenticado
-     * logout é uma função que permite ao usuário sair da sessão e limpar o asyncstorage
-     * 
-     * os estados e as funções são obtidos através do hook useAuth, que acessa o contexto de autenticação
-     * implementados em ../../contexts/AuthContext.js
-     */
+    const [selectedMonth, setSelectedMonth] = useState('06/2025');
     const { user, userHouse, logout } = useAuth();
 
     const handleLogout = async () => {
@@ -31,7 +23,10 @@ const Home = ({ navigation }) => {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View style={styles.container}>
-   
+            <Header 
+                  name={user?.name || user?.email || "Usuário"} 
+                  onLogout={handleLogout}
+                />
                 
                 <View style={styles.content}>
                    
@@ -46,6 +41,7 @@ const Home = ({ navigation }) => {
                     </View>
                 </View>
 
+                <MonthPicker selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
                 <TabBar  />
             </View>
         </TouchableWithoutFeedback>

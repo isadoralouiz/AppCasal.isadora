@@ -13,6 +13,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../services/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import globalStyles from '../../styles/GlobalStyles';
+import TabBar from '../../components/TabBar';
 
 /**
  * @description Tela para demonstrar formulário de transação financeira
@@ -82,7 +83,7 @@ const AddTransaction = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <><ScrollView style={styles.container}>
       <View style={styles.content}>
         <Text style={globalStyles.heading}>Nova Transação</Text>
         <Text style={globalStyles.subheading}>
@@ -107,7 +108,7 @@ const AddTransaction = ({ navigation }) => {
                 Despesa
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.checkbox,
@@ -133,8 +134,7 @@ const AddTransaction = ({ navigation }) => {
             placeholder="R$ 0,00"
             value={amount}
             onChangeText={setAmount}
-            keyboardType="numeric"
-          />
+            keyboardType="numeric" />
         </View>
 
         {/* Descrição */}
@@ -145,8 +145,7 @@ const AddTransaction = ({ navigation }) => {
             placeholder="Descrição da transação"
             value={description}
             onChangeText={setDescription}
-            multiline
-          />
+            multiline />
         </View>
 
         {/* Responsável - Mostra o usuário logado */}
@@ -173,8 +172,7 @@ const AddTransaction = ({ navigation }) => {
                 <Picker.Item
                   key={category.id}
                   label={category.name}
-                  value={category.id}
-                />
+                  value={category.id} />
               ))}
             </Picker>
           </View>
@@ -190,7 +188,7 @@ const AddTransaction = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </ScrollView><TabBar /></>
   );
 };
 
@@ -269,15 +267,3 @@ const styles = StyleSheet.create({
 });
 
 export default AddTransaction;
-
-// CONCEITOS ENSINADOS NESTA TELA:
-// 1. Navegação pelo TabBar - Como integrar telas com navegação por abas
-// 2. Consultas no Firestore - Query com filtros (where) para buscar dados específicos
-// 3. Estados do React - useState para gerenciar dados do formulário
-// 4. useEffect - Carregar dados quando o componente monta
-// 5. Estados condicionais - Checkbox personalizado para tipo de transação
-// 6. Picker nativo - Componente de seleção nativo do React Native
-// 7. TextInput - Captura de texto com diferentes tipos de teclado
-// 8. Contexto de autenticação - Usar dados do usuário logado
-// 9. Estilização - StyleSheet e estilos condicionais
-// 10. Estrutura de formulário - Layout e organização de campos

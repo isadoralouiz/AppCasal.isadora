@@ -26,7 +26,13 @@ const Categories = ({ navigation }) => {
     loadCategories();
   }, []);
 
- 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    }
+  };
 
   /**
    * Carrega as categorias da casa do usuário autenticado e atribui ao estado categories -- lista de todas categorias daquela casa
@@ -109,7 +115,10 @@ const Categories = ({ navigation }) => {
    */
   return (
     <View style={styles.container}>
-
+      <Header 
+        name={user?.name || user?.fullName || 'Usuário'} 
+        onLogout={handleLogout}
+      />
       
       <ScrollView style={styles.content}>
         <Text style={globalStyles.heading}>Categorias</Text>
