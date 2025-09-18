@@ -1,239 +1,283 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
-  Keyboard,
+  Alert,
+  ScrollView
 } from 'react-native';
-import { KeyboardAvoidingView, Platform } from 'react-native';
-
-import { useNavigation, useRoute } from '@react-navigation/native';
-
+import { Picker } from '@react-native-picker/picker';
+import { useAuth } from '../../contexts/AuthContext';
+import { db } from '../../services/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import globalStyles from '../../styles/GlobalStyles';
-import { auth, db } from '../../services/firebase';
-import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { Alert } from 'react-native';
 
-
-
-const HouseSelection = () => {
-  const [houseName, setHouseName] = useState('');
-  const [houseCode, setHouseCode] = useState('');
-
-  const navigation = useNavigation();
-
-      // Obtém o usuário autenticad
-    const user = auth.currentUser;
-
-
-  const handleCreateHouse = async () => {
- 
-
-    /**
-     * O id da casa é gerado a partir do email do usuário,
-     * substituindo os caracteres '@' e '.' por '-'.
-     * Isso garante que o id seja único e não contenha caracteres inválidos.
-     * O id da casa será usado para criar o documento no Firestore.
-     */
-    const houseId = user.email.replace(/[@.]/g, '-');
+/**
+ * @description Tela para demonstrar formulário de transação financeira
+ * Ensina conceitos de interface, estados e componentes básicos do React Native.
+ * Esta é uma versão didática focada na estrutura da tela.
+ */
+const AddTransaction = ({ navigation }) => {
+  // Estados principais
+  const [isIncome, setIsIncome] = useState(false); // true = receita, false = despesa
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   
-    if (!houseName.trim()) {
-      Alert.alert('Erro', 'Informe um nome para a casa.');
+  // Estados para os dados carregados do Firebase
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Context para obter dados do usuário
+  const { user } = useAuth();
+
+  // Carrega as categorias da casa ao montar o componente
+  // o useeffect é executado após a renderização do componente
+  useEffect(() => {
+    loadHouseData();
+  }, []);
+
+  /**
+   * Carrega as categorias associadas à casa do usuário
+   */
+  const loadHouseData = async () => {
+    if (!user?.houseId) {
+      Alert.alert('Erro', 'Casa não encontrada. Faça login novamente.');
       return;
     }
-  
+
     try {
-    /**
-     * Aqui estamos criando um documento no Firestore
-     * doc(db, 'houses', houseId) cria uma referência ao documento da casa
-     * houseId é o id da casa que geramos anteriormente que é o email do usuário recem cadastrado
-     * setDoc() salva os dados no Firestore
-     * O objeto passado contém os dados que queremos salvar
-     * name é o nome da casa, createdBy é o id do usuário que criou a casa,
-     * createdByEmail é o email do usuário que criou a casa, members é um array com o id do usuário que criou a casa,
-     * createdAt é a data de criação da casa, que estamos definindo como a data atual.
-     */
-      const houseRef = doc(db, 'houses', houseId);
-      await setDoc(houseRef, {
-        name: houseName,
-        createdBy: user.uid,
-        createdByEmail: user.email,
-        members: [user.uid],
-        createdAt: new Date(),
-      });
-  
-      /**
-       * Aqui estamos atualizando o documento do usuário no Firestore
-       * doc(db, 'users', user.uid) cria uma referência ao documento do usuário
-       * updateDoc() atualiza os dados no Firestore
-       * O objeto passado contém os dados que queremos atualizar
-       * houseId é o id da casa que o usuário criou, que será usado para associar o usuário à casa.
-       * Isso é importante para que o usuário possa acessar a casa que ele criou posteriormente.
-       */
-      await updateDoc(doc(db, 'users', user.uid), {
-        houseId: houseId,
-      });
-
-    
-      Alert.alert('Casa criada com sucesso!');
-
-      /**
-       * Redireciona o usuário para a tela inicial
-       * navigation.reset() redefine a pilha de navegação
-       * index: 0 define que a primeira tela da pilha será a de Home
-       * routes: [{ name: 'Home' }] define que a primeira tela será a de Home
-       */
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      });
-      return; 
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Erro ao criar casa', error.message);
-    }
-  };
-  
-
-  const handleJoinHouse = async () => {
-
-
-    
-     /**
-     * O id da casa é gerado a partir do email do usuário,
-     * substituindo os caracteres '@' e '.' por '-'.
-     * Isso garante que o id seja único e não contenha caracteres inválidos.
-     * O id da casa será usado para criar o documento no Firestore.
-     */
-    const houseId = houseCode.trim().replace(/[@.]/g, '-');
-  
-    if (!houseId) {
-      Alert.alert('Erro', 'Informe o email do administrador da casa.');
-      return;
-    }
-  
-    try {
-       /**
-     * Aqui estamos criando um documento no Firestore
-     * doc(db, 'houses', houseId) cria uma referência ao documento da casa
-     * houseId é o id da casa que geramos anteriormente que é o email do usuário recem cadastrado
-     * setDoc() salva os dados no Firestore
-     * O objeto passado contém os dados que queremos salvar
-     * name é o nome da casa, createdBy é o id do usuário que criou a casa,
-     * createdByEmail é o email do usuário que criou a casa, members é um array com o id do usuário que criou a casa,
-     * createdAt é a data de criação da casa, que estamos definindo como a data atual.
-     */
-      const houseRef = doc(db, 'houses', houseId);
-
-      /**
-       * Busca o snapsot do documento da casa
-       * getDoc(houseRef) busca o documento da casa no Firestore
-       * houseRef é a referência ao documento da casa que criamos anteriormente
-       * O snapshot contém os dados do documento, se ele existir.
-       * Se o documento não existir, o snapshot não terá dados e retornará false para exists().
-       */
-      const houseSnap = await getDoc(houseRef);
-  
-      if (!houseSnap.exists()) {
-        Alert.alert('Erro', 'Casa não encontrada.');
-        return;
-      }
-  
-      /**
-       * Atualiza o 'snapshot' do documento da casa
-       * updateDoc(houseRef, { members: arrayUnion(user.uid) }) atualiza o documento da casa
-       * houseRef é a referência ao documento da casa que criamos anteriormente
-       * members é um array que contém os ids dos usuários que são membros da casa
-       */
-      await updateDoc(houseRef, {
-        members: arrayUnion(user.uid),
-      });
-  
-      /**
-       * Aqui estamos atualizando o documento do usuário no Firestore
-       * doc(db, 'users', user.uid) cria uma referência ao documento do usuário
-       * updateDoc() atualiza os dados no Firestore
-       * O objeto passado contém os dados que queremos atualizar
-       * houseId é o id da casa que o usuário criou, que será usado para associar o usuário à casa.
-       * Isso é importante para que o usuário possa acessar a casa que ele criou posteriormente.
-       */
-      await updateDoc(doc(db, 'users', user.uid), {
-        houseId: houseId,
-      });
-
-  
-      Alert.alert('Você ingressou na casa com sucesso!');
+      setLoading(true);
       
+      // Buscar categorias da casa do usuario logado
+      // query eh uma função que permite filtrar documentos em uma coleção
+      const categoriesQuery = query(
+        collection(db, 'categories'),
+        where('houseId', '==', user.houseId)
+      );
+
+      //getDocs é uma função que busca documentos com base na query
+      const categoriesSnapshot = await getDocs(categoriesQuery);
+    
+    // categoriesSnapshot.data() NÃO existe porque QuerySnapshot não tem método .data()
+    // Cada documento individual dentro do QuerySnapshot tem .data()
+    // categoriesSnapshot.docs é um array de DocumentSnapshot
+    // map faz um loop nesse array e extrai os dados de cada documento
+    const categoriesData = categoriesSnapshot.docs.map(doc => ({
+      id: doc.id,        // ID do documento
+      ...doc.data()      // Dados do documento (cada doc individual tem .data())
+    }));
+
+    // atribui as categorias carregadas ao estado
+    setCategories(categoriesData);
+
     } catch (error) {
-      console.error(error);
-      Alert.alert('Erro ao entrar na casa', error.message);
+      console.error('Erro ao carregar dados da casa:', error);
+      Alert.alert('Erro', 'Não foi possível carregar os dados da casa.');
+    } finally {
+      setLoading(false);
     }
   };
-  
-  
-  
 
-  
-    return (
-  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={globalStyles.heading}>Nova Transação</Text>
+        <Text style={globalStyles.subheading}>
+          Adicione uma nova receita ou despesa
+        </Text>
 
-      <Text style={globalStyles.heading}>Nova Casa</Text>
+        {/* Tipo de transação - Checkbox */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Tipo de Transação</Text>
+          <View style={styles.checkboxContainer}>
+            <TouchableOpacity
+              style={[
+                styles.checkbox,
+                !isIncome && styles.checkboxSelected
+              ]}
+              onPress={() => setIsIncome(false)}
+            >
+              <Text style={[
+                styles.checkboxText,
+                !isIncome && styles.checkboxTextSelected
+              ]}>
+                Despesa
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.checkbox,
+                isIncome && styles.checkboxSelected
+              ]}
+              onPress={() => setIsIncome(true)}
+            >
+              <Text style={[
+                styles.checkboxText,
+                isIncome && styles.checkboxTextSelected
+              ]}>
+                Receita
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      <TextInput
-        placeholder="Nome da casa"
-        value={houseName}
-        onChangeText={setHouseName}
-        style={[globalStyles.textInput, { width: '100%', marginBottom: 16 }]}
-      />
+        {/* Valor */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Valor</Text>
+          <TextInput
+            style={globalStyles.textInput}
+            placeholder="R$ 0,00"
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="numeric"
+          />
+        </View>
 
-      <TouchableOpacity style={globalStyles.primaryButton} onPress={handleCreateHouse}>
-        <Text style={globalStyles.primaryButtonText}>Criar casa</Text>
-      </TouchableOpacity>
+        {/* Descrição */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Descrição (opcional)</Text>
+          <TextInput
+            style={globalStyles.textInput}
+            placeholder="Descrição da transação"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+          />
+        </View>
 
-      <View style={styles.divider} />
+        {/* Responsável - Mostra o usuário logado */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Responsável</Text>
+          <View style={[globalStyles.textInput, styles.responsibleContainer]}>
+            <Text style={styles.responsibleText}>
+              {user?.name || user?.email || 'Usuário logado'}
+            </Text>
+          </View>
+        </View>
 
-      <Text style={[globalStyles.subheading, { marginBottom: 8 }]}>
-        Já tem o código de uma casa?
-      </Text>
+        {/* Categoria */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Categoria</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Selecione uma categoria" value="" />
+              {categories.map((category) => (
+                <Picker.Item
+                  key={category.id}
+                  label={category.name}
+                  value={category.id}
+                />
+              ))}
+            </Picker>
+          </View>
+        </View>
 
-      <TextInput
-        placeholder="Código da casa"
-        value={houseCode}
-        onChangeText={setHouseCode}
-        style={[globalStyles.textInput, { width: '100%', marginBottom: 16 }]}
-      />
-
-      <TouchableOpacity style={globalStyles.secondaryButton} onPress={handleJoinHouse}>
-        <Text style={globalStyles.secondaryButtonText}>Ingressar em uma casa existente</Text>
-      </TouchableOpacity>
-
-    </KeyboardAvoidingView>
-  </TouchableWithoutFeedback>
-);
-
-
+        {/* Botão Salvar */}
+        <TouchableOpacity
+          style={globalStyles.primaryButton}
+          onPress={() => Alert.alert('Info', 'Funcionalidade em desenvolvimento!')}
+        >
+          <Text style={globalStyles.primaryButtonText}>
+            Salvar Transação
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
 };
 
-export default HouseSelection;
-
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: '#fff',
-      padding: 24,
-      justifyContent: 'center',
-    },
-    divider: {
-      height: 1,
-      backgroundColor: '#ccc',
-      marginVertical: 32,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  content: {
+    padding: 20,
+    paddingBottom: 100, // Espaço para o TabBar
+  },
+  section: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#000',
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  checkbox: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#d1d1d6',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxSelected: {
+    backgroundColor: '#006ffd',
+    borderColor: '#006ffd',
+  },
+  checkboxText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  checkboxTextSelected: {
+    color: '#fff',
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#d1d1d6',
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  picker: {
+    height: 48,
+  },
+  selectButton: {
+    justifyContent: 'center',
+  },
+  selectText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  selectPlaceholder: {
+    color: '#999',
+  },
+  responsibleContainer: {
+    justifyContent: 'center',
+    backgroundColor: '#f8f8f8',
+  },
+  responsibleText: {
+    fontSize: 16,
+    color: '#666',
+    fontStyle: 'italic',
+  },
+});
 
-  });
+export default AddTransaction;
+
+// CONCEITOS ENSINADOS NESTA TELA:
+// 1. Navegação pelo TabBar - Como integrar telas com navegação por abas
+// 2. Consultas no Firestore - Query com filtros (where) para buscar dados específicos
+// 3. Estados do React - useState para gerenciar dados do formulário
+// 4. useEffect - Carregar dados quando o componente monta
+// 5. Estados condicionais - Checkbox personalizado para tipo de transação
+// 6. Picker nativo - Componente de seleção nativo do React Native
+// 7. TextInput - Captura de texto com diferentes tipos de teclado
+// 8. Contexto de autenticação - Usar dados do usuário logado
+// 9. Estilização - StyleSheet e estilos condicionais
+// 10. Estrutura de formulário - Layout e organização de campos

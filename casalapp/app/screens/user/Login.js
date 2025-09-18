@@ -11,22 +11,14 @@ import {
 } from 'react-native';
 import globalStyles from '../../styles/GlobalStyles';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../services/firebase';
-
-// IMPORTANDO O HOOK DO CONTEXT
+import { auth } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // USANDO O CONTEXT
-  // Aqui acessamos as funções e dados do AuthContext
-  const { login, user, isAuthenticated } = useAuth();
-  
-  // Vamos mostrar o estado atual no console para fins didáticos
-  console.log(' Estado atual do Context:', { user, isAuthenticated });
+  const [isLoading, setIsLoading] = useState(false);
+  const { buscarDadosUsuario } = useAuth();
 
  const handleLogin = async () => {
 
@@ -35,59 +27,46 @@ const Login = ({ navigation }) => {
       return;
     }
 
+    setIsLoading(true);
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      const userFirebase = userCredential.user;
 
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
+      // Busca e salva os dados do usuário usando o contexto
+      const { userData, houseData } = await buscarDadosUsuario(userFirebase);
 
-      if (userDocSnap.exists()) {
-        /* Obtém os dados do usuário */
-        const userData = userDocSnap.data();
-        
-        // USANDO O CONTEXT - Salvamos os dados do usuário no estado global
-        const userInfo = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          name: userData.name,
-          houseId: userData.houseId
-        };
-        
-        // Chama a função login do Context para atualizar o estado global
-        login(userInfo);
-
-        // Se o usuário já estiver associado a uma casa
-        if (userData.houseId) {
-          const houseDocRef = doc(db, 'houses', userData.houseId);
-          const houseDocSnap = await getDoc(houseDocRef);
-
-          if (houseDocSnap.exists()) {
-            const houseData = houseDocSnap.data();
-
-            // Redireciona para Home
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Home' }],
-            });
-            return; // Importante para parar o fluxo aqui
-          }
-        }
-
-        // Se não tiver casa, redireciona para seleção de casa
+      // A navegação será automática via AuthContext
+      // Se tiver casa, vai para Home, senão vai para HouseSelection
+      if (houseData) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      } else {
         navigation.reset({
           index: 0,
           routes: [{ name: 'HouseSelection' }],
         });
-      } else {
-        Alert.alert('Erro', 'Usuário não encontrado no banco de dados.');
       }
+
     } catch (error) {
       console.error(error);
-      Alert.alert('Erro ao fazer login', error.message);
+      let errorMessage = 'Erro ao fazer login';
+      
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'Usuário não encontrado';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Senha incorreta';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Email inválido';
+      }
+      
+      Alert.alert('Erro', errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
-
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -113,13 +92,18 @@ const Login = ({ navigation }) => {
             />
           </View>
 
-
           <TouchableOpacity>
             <Text style={{ color: '#006ffd', fontWeight: '600', fontSize: 14 }}>Esqueceu sua senha?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={globalStyles.primaryButton} onPress={handleLogin}>
-            <Text style={globalStyles.primaryButtonText}>Login</Text>
+          <TouchableOpacity 
+            style={globalStyles.primaryButton} 
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            <Text style={globalStyles.primaryButtonText}>
+              {isLoading ? 'Entrando...' : 'Login'}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.bottomRow}>
