@@ -81,6 +81,35 @@ const AddTransaction = ({ navigation }) => {
     }
   };
 
+  const handleSaveTransaction = async () => {
+    if (!amount || !selectedCategory) {
+      Alert.alert('Erro', 'Preencha valor e categoria.');
+      return;
+    }
+  
+    try {
+      await addDoc(collection(db, 'transactions'), {
+        userId: user.uid,
+        houseId: user.houseId,
+        type: isIncome ? 'income' : 'expense',
+        amount: parseFloat(amount.replace(',', '.')),
+        description: description,
+        categoryId: selectedCategory,
+        createdAt: serverTimestamp()
+      });
+  
+      Alert.alert('Sucesso', 'Transação salva!');
+      setAmount('');
+      setDescription('');
+      setSelectedCategory('');
+      setIsIncome(false);
+      
+    } catch (error) {
+      console.error('Erro ao salvar transação:', error);
+      Alert.alert('Erro', 'Não foi possível salvar a transação.');
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
@@ -139,7 +168,7 @@ const AddTransaction = ({ navigation }) => {
 
         {/* Descrição */}
         <View style={styles.section}>
-          <Text style={styles.label}>Descrição (opcional)</Text>
+          <Text style={styles.label}>Descrição(opcional)</Text>
           <TextInput
             style={globalStyles.textInput}
             placeholder="Descrição da transação"
@@ -183,8 +212,7 @@ const AddTransaction = ({ navigation }) => {
         {/* Botão Salvar */}
         <TouchableOpacity
           style={globalStyles.primaryButton}
-          onPress={() => Alert.alert('Info', 'Funcionalidade em desenvolvimento!')}
-        >
+          onPress={handleSaveTransaction}>
           <Text style={globalStyles.primaryButtonText}>
             Salvar Transação
           </Text>
