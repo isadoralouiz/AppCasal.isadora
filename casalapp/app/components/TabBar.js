@@ -22,13 +22,9 @@ const TabBar = () => {
         navigation.navigate('Categories');
     };
 
-    const handleHome = () => {
-        navigation.navigate('Home');
-    };
-
     return (
         <View style={styles.tabBar}>
-            <TouchableOpacity onPress={handleHome}>
+            <TouchableOpacity>
                 <Text style={styles.tabItem}>H</Text>
             </TouchableOpacity>
             <TouchableOpacity>
